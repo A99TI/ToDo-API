@@ -1,0 +1,9 @@
+# Check the docker version
+docker --version
+
+# Run a MySQL 8.0 container in detached mode with:
+# - root password set to 'secret'
+# - a database named 'tododb' created
+# - container named 'mysqldb'
+# - port 3306 in the container mapped to port 3307 on the host
+docker run -d -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=tododb --name mysqldb -p 3307:3306 mysql:8.0
