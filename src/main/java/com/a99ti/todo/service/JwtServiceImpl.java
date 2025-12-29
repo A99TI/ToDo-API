@@ -42,8 +42,6 @@ public class JwtServiceImpl implements JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-
-
     @Override
     public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
         return Jwts.builder()
