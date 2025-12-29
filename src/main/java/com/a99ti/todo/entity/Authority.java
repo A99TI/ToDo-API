@@ -17,7 +17,7 @@ public class Authority implements GrantedAuthority {
     }
 
     @Override
-    public @Nullable String getAuthority() {
-        return "";
+    public String getAuthority() {
+        return null;
     }
 }
