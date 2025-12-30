@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/users")
 @Tag(name = "User REST API Endpoints", description = "Operations related to info about current user")
 public class UserController {
 
