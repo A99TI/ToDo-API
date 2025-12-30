@@ -1,6 +1,7 @@
 package com.a99ti.todo.controller;
 
 import com.a99ti.todo.entity.User;
+import com.a99ti.todo.response.UserResponse;
 import com.a99ti.todo.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,7 @@ public class UserController {
     }
 
     @GetMapping("/info")
-    public User getUserInfo(){
+    public UserResponse getUserInfo(){
         return userService.getUserInfo();
     }
 }
