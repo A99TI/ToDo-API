@@ -1,6 +1,8 @@
 package com.a99ti.todo.controller;
 
+import com.a99ti.todo.request.AuthenticationRequest;
 import com.a99ti.todo.request.RegisterRequest;
+import com.a99ti.todo.response.AuthenticationResponse;
 import com.a99ti.todo.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,5 +26,12 @@ public class AuthenticationController {
     @PostMapping("/register")
     public void register(@Valid @RequestBody RegisterRequest registerRequest) throws Exception {
         authenticationService.register(registerRequest);
+    }
+
+    @Operation(summary = "Login a user", description = "Submit email & password to authenticate user")
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/login")
+    public AuthenticationResponse login(@Valid @RequestBody AuthenticationRequest authenticationRequest){
+        return authenticationService.login(authenticationRequest);
     }
 }
