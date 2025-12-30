@@ -3,24 +3,32 @@ package com.a99ti.todo.service;
 import com.a99ti.todo.entity.Authority;
 import com.a99ti.todo.entity.User;
 import com.a99ti.todo.repository.UserRepository;
+import com.a99ti.todo.request.AuthenticationRequest;
 import com.a99ti.todo.request.RegisterRequest;
+import com.a99ti.todo.response.AuthenticationResponse;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService{
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public AuthenticationServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthenticationServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -31,6 +39,22 @@ public class AuthenticationServiceImpl implements AuthenticationService{
         }
         User user = buildNewUser(input);
         userRepository.save(user);
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthenticationResponse login(AuthenticationRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Email or Password"));
+
+        String jwtToken = jwtService.generateToken(new HashMap<>(), user);
+
+        return new AuthenticationResponse(jwtToken);
 
     }
 
