@@ -4,6 +4,7 @@ import com.a99ti.todo.entity.Authority;
 import com.a99ti.todo.entity.User;
 import com.a99ti.todo.repository.UserRepository;
 import com.a99ti.todo.response.UserResponse;
+import com.a99ti.todo.util.FindAuthenticatedUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,22 +19,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
+    private final FindAuthenticatedUser findAuthenticatedUser;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, FindAuthenticatedUser findAuthenticatedUser) {
         this.userRepository = userRepository;
+        this.findAuthenticatedUser = findAuthenticatedUser;
     }
-
 
     @Override
     @Transactional(readOnly = true)
     public UserResponse getUserInfo(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new AccessDeniedException("Authentication required");
-        }
-
-        User user = (User) authentication.getPrincipal();
+        User user = findAuthenticatedUser.getAuthenticatedUser();
 
         return new UserResponse(
                 user.getId(),
@@ -45,13 +41,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void deleteUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")){
-            throw new AccessDeniedException("Authentication required");
-        }
-
-        User user = (User) authentication.getPrincipal();
+        User user = findAuthenticatedUser.getAuthenticatedUser();
 
         if (isLastAdmin(user)){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin cannot delete itself");
