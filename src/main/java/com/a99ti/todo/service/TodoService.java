@@ -9,4 +9,5 @@ public interface TodoService {
     List<TodoResponse> getAllTodos();
     TodoResponse createTodo(TodoRequest todoRequest);
     TodoResponse toggleTodoCompletion(long id);
+    void deleteTodo(long id);
 }
