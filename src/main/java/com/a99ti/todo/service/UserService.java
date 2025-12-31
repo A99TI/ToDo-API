@@ -5,4 +5,5 @@ import com.a99ti.todo.response.UserResponse;
 
 public interface UserService {
     UserResponse getUserInfo();
+    void deleteUser();
 }
