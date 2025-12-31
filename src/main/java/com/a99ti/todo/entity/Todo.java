@@ -21,7 +21,7 @@ public class Todo {
     private int priority;
 
     @Column(nullable = false)
-    private String complete;
+    private boolean complete;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -30,7 +30,7 @@ public class Todo {
     public Todo() {
     }
 
-    public Todo(String title, String description, int priority, String complete, User owner) {
+    public Todo(String title, String description, int priority, boolean complete, User owner) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -70,11 +70,11 @@ public class Todo {
         this.priority = priority;
     }
 
-    public String getComplete() {
+    public boolean isComplete() {
         return complete;
     }
 
-    public void setComplete(String complete) {
+    public void setComplete(boolean complete) {
         this.complete = complete;
     }
 
