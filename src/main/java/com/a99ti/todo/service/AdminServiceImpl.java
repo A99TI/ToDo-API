@@ -53,6 +53,20 @@ public class AdminServiceImpl implements AdminService{
 
     }
 
+    @Override
+    public void deleteNonAdminUser(long userId) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (user.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist");
+        }
+        if (user.get().getAuthorities().stream().anyMatch(auth->"ROLE_ADMIN".equals(auth.getAuthority()))){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is already an admin");
+        }
+
+        userRepository.delete(user.get());
+    }
+
     private UserResponse convertToUserResponse(User user){
         return new UserResponse(
                 user.getId(),

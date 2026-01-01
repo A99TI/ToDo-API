@@ -34,4 +34,11 @@ public class AdminController {
     public UserResponse promoteToAdmin(@PathVariable @Min(1) long userId){
         return adminService.promoteToAdmin(userId);
     }
+
+    @Operation(summary = "Delete User", description = "Delete a non-admin user from the system")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{userId}")
+    public void deleteUser(@PathVariable @Min(1) long userId){
+        adminService.deleteNonAdminUser(userId);
+    }
 }
