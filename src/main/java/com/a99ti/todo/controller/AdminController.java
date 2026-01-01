@@ -4,11 +4,9 @@ import com.a99ti.todo.response.UserResponse;
 import com.a99ti.todo.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,5 +26,12 @@ public class AdminController {
     @GetMapping
     public List<UserResponse> getAllUsers(){
         return adminService.getAllUsers();
+    }
+
+    @Operation(summary = "Promote user to admin", description = "Promote user to admin role")
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/{userId}/role")
+    public UserResponse promoteToAdmin(@PathVariable @Min(1) long userId){
+        return adminService.promoteToAdmin(userId);
     }
 }
