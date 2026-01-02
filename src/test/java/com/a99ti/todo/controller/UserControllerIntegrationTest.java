@@ -50,29 +50,39 @@ public class UserControllerIntegrationTest {
         objectMapper = new ObjectMapper();
     }
 
-    @Test
-    void getUserInfo_WithValidJwtToken_ShouldReturnUserDetails() throws Exception {
-        // Create user directly (first user gets both ROLE_ADMIN and ROLE_EMPLOYEE)
+    private User createAndSaveUser(String firstName, String lastName, String email, String password, ArrayList<String> roles){
         User user = new User();
-        user.setFirstName("john");
-        user.setLastName("doe");
-        user.setEmail("johndoe@email.com");
-        user.setPassword(passwordEncoder.encode("password123"));
-        
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+
         List<Authority> authorities = new ArrayList<>();
-        authorities.add(new Authority("ROLE_EMPLOYEE"));
-        authorities.add(new Authority("ROLE_ADMIN"));
+        for (String role : roles) {
+            authorities.add(new Authority(role));
+        }
         user.setAuthorities(authorities);
-        
-        user = userRepository.save(user);
-        
-        // Set up authentication
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+
+        return userRepository.save(user);
+    }
+
+    private UsernamePasswordAuthenticationToken createAuthenticationToken(User user){
+        return new UsernamePasswordAuthenticationToken(
                 user,
                 null,
                 user.getAuthorities()
         );
-        
+    }
+
+    @Test
+    void getUserInfo_WithValidJwtToken_ShouldReturnUserDetails() throws Exception {
+        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE", "ROLE_ADMIN"));
+
+        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
+                roles);
+
+        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
+
         // Get user info
         mockMvc.perform(get("/api/users/info")
                         .with(request -> {
@@ -90,27 +100,14 @@ public class UserControllerIntegrationTest {
 
     @Test
     void deleteNonAdminUser_WithValidJwtToken_ShouldDeleteUser() throws Exception {
-        // Create user directly (first user gets both ROLE_ADMIN and ROLE_EMPLOYEE)
-        User user = new User();
-        user.setFirstName("john");
-        user.setLastName("doe");
-        user.setEmail("johndoe@email.com");
-        user.setPassword(passwordEncoder.encode("password123"));
+        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE"));
 
-        List<Authority> authorities = new ArrayList<>();
-        authorities.add(new Authority("ROLE_EMPLOYEE"));
-        user.setAuthorities(authorities);
+        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
+                roles);
 
-        user = userRepository.save(user);
+        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
 
-        // Set up authentication
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                user,
-                null,
-                user.getAuthorities()
-        );
-
-        // Get user info
+        // Delete User
         mockMvc.perform(delete("/api/users")
         .with(request -> {
             SecurityContextHolder.getContext().setAuthentication(auth);
