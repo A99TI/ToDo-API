@@ -3,8 +3,10 @@ package com.a99ti.todo.controller;
 import com.a99ti.todo.entity.Authority;
 import com.a99ti.todo.entity.User;
 import com.a99ti.todo.repository.UserRepository;
+import com.a99ti.todo.request.PasswordUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -22,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,6 +117,41 @@ public class UserControllerIntegrationTest {
         .andExpect(status().isOk());
 
         assertFalse(userRepository.findById(user.getId()).isPresent(), "User should not exist after deletion");;
+
+    }
+
+    @Test
+    void changePassword_ShouldChangeUserPassword() throws Exception {
+        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE", "ROLE_ADMIN"));
+
+        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123", roles);
+
+        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
+
+        String newPassword = "test123";
+        PasswordUpdateRequest passwordUpdateRequest = new PasswordUpdateRequest(
+                "password123",
+                newPassword,
+                newPassword
+        );
+
+        //Change Password
+        mockMvc.perform(put("/api/users/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(passwordUpdateRequest))
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(status().isOk());
+
+        // Verify new password is stored in database
+        User updatedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        assertTrue(passwordEncoder.matches(newPassword, updatedUser.getPassword()),
+                "New password should match the password stored in database");
+
+
 
     }
 }
