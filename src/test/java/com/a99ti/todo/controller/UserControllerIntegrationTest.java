@@ -1,15 +1,15 @@
 package com.a99ti.todo.controller;
 
-import com.a99ti.todo.entity.Authority;
 import com.a99ti.todo.entity.User;
 import com.a99ti.todo.repository.UserRepository;
 import com.a99ti.todo.request.PasswordUpdateRequest;
+import com.a99ti.todo.util.UserTestUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,9 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,6 +39,9 @@ public class UserControllerIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UserTestUtil userTestUtil;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
@@ -51,38 +51,12 @@ public class UserControllerIntegrationTest {
         objectMapper = new ObjectMapper();
     }
 
-    private User createAndSaveUser(String firstName, String lastName, String email, String password, ArrayList<String> roles){
-        User user = new User();
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-
-        List<Authority> authorities = new ArrayList<>();
-        for (String role : roles) {
-            authorities.add(new Authority(role));
-        }
-        user.setAuthorities(authorities);
-
-        return userRepository.save(user);
-    }
-
-    private UsernamePasswordAuthenticationToken createAuthenticationToken(User user){
-        return new UsernamePasswordAuthenticationToken(
-                user,
-                null,
-                user.getAuthorities()
-        );
-    }
-
     @Test
     void getUserInfo_ShouldReturnUserDetails() throws Exception {
-        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE", "ROLE_ADMIN"));
 
-        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
-                roles);
+        User user = userTestUtil.createAndSaveDefaultAdminUser();
 
-        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
 
         // Get user info
         mockMvc.perform(get("/api/users/info")
@@ -101,12 +75,9 @@ public class UserControllerIntegrationTest {
 
     @Test
     void deleteNonAdminUser_ShouldDeleteUser() throws Exception {
-        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE"));
+        User user = userTestUtil.createAndSaveDefaultUser();
 
-        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
-                roles);
-
-        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
 
         // Delete User
         mockMvc.perform(delete("/api/users")
@@ -122,11 +93,9 @@ public class UserControllerIntegrationTest {
 
     @Test
     void changePassword_ShouldChangeUserPassword() throws Exception {
-        ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE", "ROLE_ADMIN"));
+        User user = userTestUtil.createAndSaveDefaultAdminUser();
 
-        User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123", roles);
-
-        UsernamePasswordAuthenticationToken auth = createAuthenticationToken(user);
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
 
         String newPassword = "test123";
         PasswordUpdateRequest passwordUpdateRequest = new PasswordUpdateRequest(
