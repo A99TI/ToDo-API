@@ -75,7 +75,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    void getUserInfo_WithValidJwtToken_ShouldReturnUserDetails() throws Exception {
+    void getUserInfo_ShouldReturnUserDetails() throws Exception {
         ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE", "ROLE_ADMIN"));
 
         User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
@@ -99,7 +99,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    void deleteNonAdminUser_WithValidJwtToken_ShouldDeleteUser() throws Exception {
+    void deleteNonAdminUser_ShouldDeleteUser() throws Exception {
         ArrayList<String> roles = new ArrayList<>(List.of("ROLE_EMPLOYEE"));
 
         User user = createAndSaveUser("john", "doe", "johndoe@email.com", "password123",
