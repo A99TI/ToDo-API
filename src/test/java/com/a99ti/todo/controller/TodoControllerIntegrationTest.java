@@ -20,8 +20,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -110,6 +110,33 @@ public class TodoControllerIntegrationTest {
 
     }
 
+    @Test
+    void deleteTodo_shouldDeleteToDo() throws Exception{
+        User user = userTestUtil.createAndSaveDefaultUser();
 
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
+
+        Todo todo = new Todo(
+                "TestRequest",
+                "A test basic request",
+                5,
+                false,
+                user
+        );
+
+        Todo savedTodo = todoRepository.save(todo);
+
+        mockMvc.perform(delete("/api/todos/" + savedTodo.getId())
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(status().isNoContent());
+
+        assertFalse(todoRepository.findById(savedTodo.getId()).isPresent(), "To do should not exist after deletion");
+
+
+    }
+    
 
 }
