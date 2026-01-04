@@ -1,8 +1,10 @@
 package com.a99ti.todo.controller;
 
+import com.a99ti.todo.entity.Todo;
 import com.a99ti.todo.entity.User;
 import com.a99ti.todo.repository.TodoRepository;
 import com.a99ti.todo.request.TodoRequest;
+import com.a99ti.todo.response.TodoResponse;
 import com.a99ti.todo.util.UserTestUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -75,4 +78,38 @@ public class TodoControllerIntegrationTest {
 
 
     }
+
+    @Test
+    void getToDo_shouldReturnTodo() throws Exception{
+        User user = userTestUtil.createAndSaveDefaultUser();
+
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
+
+        Todo todo = new Todo(
+                "TestRequest",
+                "A test basic request",
+                5,
+                false,
+                user
+        );
+
+        Todo savedTodo = todoRepository.save(todo);
+
+        mockMvc.perform(get("/api/todos")
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(savedTodo.getId()))
+                .andExpect(jsonPath("$[0].title").value(savedTodo.getTitle()))
+                .andExpect(jsonPath("$[0].description").value(savedTodo.getDescription()))
+                .andExpect(jsonPath("$[0].priority").value(savedTodo.getPriority()))
+                .andExpect(jsonPath("$[0].completed").value(savedTodo.isComplete()));
+
+    }
+
+
+
 }
