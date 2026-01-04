@@ -22,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -137,6 +138,36 @@ public class TodoControllerIntegrationTest {
 
 
     }
-    
+
+    @Test
+    void updateTodo_shouldSetTodoToCompleted() throws Exception{
+        User user = userTestUtil.createAndSaveDefaultUser();
+
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(user);
+
+        Todo todo = new Todo(
+                "TestRequest",
+                "A test basic request",
+                5,
+                false,
+                user
+        );
+
+        Todo savedTodo = todoRepository.save(todo);
+        boolean expectedCompleted = !savedTodo.isComplete();
+
+        mockMvc.perform(put("/api/todos/" + savedTodo.getId())
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(savedTodo.getId()))
+                .andExpect(jsonPath("$.title").value(savedTodo.getTitle()))
+                .andExpect(jsonPath("$.description").value(savedTodo.getDescription()))
+                .andExpect(jsonPath("$.priority").value(savedTodo.getPriority()))
+                .andExpect(jsonPath("$.completed").value(expectedCompleted));
+
+    }
 
 }
