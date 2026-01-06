@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -87,6 +89,25 @@ public class AdminControllerIntegrationTest {
                 .andExpect(jsonPath("$[?(@.email == '" + adminUser.getEmail() + "')]").exists())
                 .andExpect(jsonPath("$[?(@.email == 'johndoe1@email.com')]").exists())
                 .andExpect(jsonPath("$[?(@.email == 'johndoe2@email.com')]").exists());
+    }
+
+    @Test
+    void deleteUser_ShouldDeleteStoredUser() throws Exception{
+        User adminUser = userTestUtil.createAndSaveDefaultAdminUser();
+
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(adminUser);
+
+        User user1 = userTestUtil.createAndSaveDefaultUser();
+
+        mockMvc.perform(delete("/api/admin/" + user1.getId())
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(status().isNoContent());
+
+        assertFalse(userRepository.findById(user1.getId()).isPresent(), "Created user should not exist after deletion");    
+
     }
 
 
