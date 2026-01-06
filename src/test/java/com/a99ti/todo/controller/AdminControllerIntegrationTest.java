@@ -25,8 +25,7 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -106,9 +105,32 @@ public class AdminControllerIntegrationTest {
                 }))
                 .andExpect(status().isNoContent());
 
-        assertFalse(userRepository.findById(user1.getId()).isPresent(), "Created user should not exist after deletion");    
+        assertFalse(userRepository.findById(user1.getId()).isPresent(), "Created user should not exist after deletion");
 
     }
+
+    @Test
+    void promoteUser_ShouldPromoteUserToAdmin() throws Exception{
+        User adminUser = userTestUtil.createAndSaveDefaultAdminUser();
+
+        UsernamePasswordAuthenticationToken auth = userTestUtil.createAuthenticationToken(adminUser);
+
+        User user1 = userTestUtil.createAndSaveDefaultUser();
+
+        mockMvc.perform(put("/api/admin/" + user1.getId() + "/role")
+                .with(request -> {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    return request;
+                }))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.fullName").value("john doe"))
+                .andExpect(jsonPath("$.email").value("johndoe@email.com"))
+                .andExpect(jsonPath("$.authorities").isArray())
+                .andExpect(jsonPath("$.authorities[*].authority").value(org.hamcrest.Matchers.containsInAnyOrder("ROLE_EMPLOYEE", "ROLE_ADMIN")));
+    }
+
+
 
 
 
