@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  mysqldb:
+    image: mysql:8.4
+    container_name: mysqldb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: tododb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build: .
+    container_name: todo-api
+    depends_on:
+        mysqldb:
+          condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/tododb?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: secret
+      JWT_SECRET: 9gkNpz7asf2Zx31zbInvIBKiY4adUg2WIqsnWJUL9gS
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
