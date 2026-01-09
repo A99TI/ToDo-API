@@ -3,7 +3,7 @@ version: "3.9"
 services:
 
   mysqldb:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysqldb
     restart: always
     environment:
@@ -18,7 +18,8 @@ services:
     build: .
     container_name: todo-api
     depends_on:
-      - mysqldb
+        mysqldb:
+          condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/tododb?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
